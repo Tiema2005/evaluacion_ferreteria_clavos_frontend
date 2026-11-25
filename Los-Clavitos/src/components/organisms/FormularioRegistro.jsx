@@ -3,7 +3,7 @@ import CampoInput from "../atoms/CampoInput";
 import Boton from "../atoms/Boton";
 import { validarDatosRegistro } from "../../utils/validacionesRegistro";
 
-function FormularioRegistro(props) {
+function FormularioRegistro({ onEnviar, cargando = false }) {
     const [datos, setDatos] = useState({
         nombre: "",
         apellidos: "",
@@ -30,15 +30,20 @@ function FormularioRegistro(props) {
 
         setErrores(nuevosErrores);
 
+        if (datos.contrasena.length < 8) {
+            setErrores({ ...nuevosErrores, contrasena: "La contraseña debe tener al menos 8 caracteres." });
+            return;
+        }
+
         if (Object.keys(nuevosErrores).length > 0) {
             return;
         }
 
-        // Demostración: no almacenamos contraseñas.
-        props.onEnviar({
+        onEnviar({
             nombre: datos.nombre.trim(),
             apellidos: datos.apellidos.trim(),
-            correo: datos.correo.trim()
+            correo: datos.correo.trim(),
+            contrasena: datos.contrasena
         });
     }
 
@@ -80,7 +85,7 @@ function FormularioRegistro(props) {
                 name="contrasena"
                 label="Contraseña"
                 tipo="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={datos.contrasena}
                 onChange={cambiarCampo}
                 errorTexto={errores.contrasena}
@@ -98,7 +103,8 @@ function FormularioRegistro(props) {
             />
 
             <Boton
-                texto="Registrarse"
+                texto={cargando ? "Registrando..." : "Registrarse"}
+                deshabilitado={cargando}
                 variante="primary"
                 tipo="submit"
             />
