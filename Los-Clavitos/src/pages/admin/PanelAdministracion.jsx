@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { useProductos } from "../../context/ProductosContext";
 import { listarPedidos } from "../../services/pedidoService";
 import { listarCategorias } from "../../services/categoriaService";
-import { listarUsuarios } from "../../services/usuarioService";
 
 import Boton from "../../components/atoms/Boton";
 import { useTituloPagina } from "../../hooks/useTituloPagina";
@@ -19,7 +18,6 @@ function PanelAdministracion() {
 
     const pedidos = listarPedidos();
     const categorias = listarCategorias(productos);
-    const usuarios = listarUsuarios();
 
     const productosCriticos = productos.filter(
         (producto) =>
@@ -187,7 +185,7 @@ function PanelAdministracion() {
                 <Col xs={12} md={6}>
                     <div className="card h-100"><div className="card-body d-flex flex-column">
                         <h3 className="h5">Usuarios</h3>
-                        <p>Perfiles registrados: <strong>{usuarios.length}</strong>. Gestiona roles y cuenta corriente simulados.</p>
+                        <p>Gestiona usuarios reales, permisos y desactivaciones en PostgreSQL.</p>
                         <div className="mt-auto"><Boton texto="Gestionar usuarios" onClick={() => navigate("/admin/usuarios")} /></div>
                     </div></div>
                 </Col>

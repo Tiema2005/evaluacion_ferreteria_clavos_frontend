@@ -1,8 +1,10 @@
 import { Container, Row, Col } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { datosTienda } from "../../data/tienda";
+import { useAuth } from "../../context/AuthContext";
 
 function Footer() {
+    const { autenticado } = useAuth();
     return (
         <footer className="footer-tienda mt-auto border-top border-warning border-3">
             <Container className="py-5">
@@ -45,8 +47,8 @@ function Footer() {
                             <li><Link to="/nosotros">Nuestra tienda</Link></li>
                             <li><Link to="/contacto">Contacto y ubicación</Link></li>
                             <li><Link to="/blog">Blog y noticias</Link></li>
-                            <li><Link to="/login">Iniciar sesión</Link></li>
-                            <li><Link to="/registro">Registrarse</Link></li>
+                            {!autenticado && <li><Link to="/login">Iniciar sesión</Link></li>}
+                            {!autenticado && <li><Link to="/registro">Registrarse</Link></li>}
                         </ul>
                     </Col>
                 </Row>

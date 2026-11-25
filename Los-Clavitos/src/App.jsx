@@ -1,5 +1,7 @@
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import RutaProtegida from "./components/guards/RutaProtegida";
 
 import PlantillaPublica from "./components/templates/PlantillaPublica";
 
@@ -29,9 +31,16 @@ import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
 import HistorialPedidos from "./pages/pedidos/HistorialPedidos";
 import ReportesAdmin from "./pages/admin/ReportesAdmin";
 
+function EntradaPublica({ children }) {
+    const { autenticado, esAdmin } = useAuth();
+    if (autenticado) return <Navigate to={esAdmin ? "/admin/usuarios" : "/catalogo"} replace />;
+    return children;
+}
+
 function App() {
     return (
         <BrowserRouter>
+            <AuthProvider>
             <Routes>
                 <Route element={<PlantillaPublica />}>
                     <Route path="/" element={<Inicio />} />
@@ -52,9 +61,9 @@ function App() {
                         element={<ResultadoPedido />}
                     />
 
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/registro" element={<Registro />} />
-                    <Route path="/historial" element={<HistorialPedidos />} />
+                    <Route path="/login" element={<EntradaPublica><Login /></EntradaPublica>} />
+                    <Route path="/registro" element={<EntradaPublica><Registro /></EntradaPublica>} />
+                    <Route element={<RutaProtegida />}><Route path="/historial" element={<HistorialPedidos />} /></Route>
 
                     <Route path="/nosotros" element={<Nosotros />} />
                     <Route path="/ofertas" element={<Ofertas />} />
@@ -65,30 +74,18 @@ function App() {
                     />
                     <Route path="/contacto" element={<Contacto />} />
 
-                    <Route
-                        path="/admin"
-                        element={<PanelAdministracion />}
-                    />
-                    <Route
-                        path="/admin/pedidos"
-                        element={<PedidosAdmin />}
-                    />
-                    <Route
-                        path="/admin/stock-critico"
-                        element={<StockCritico />}
-                    />
-                    <Route
-                        path="/admin/categorias"
-                        element={<CategoriasAdmin />}
-                    />
-                    <Route path="/admin/usuarios" element={<UsuariosAdmin />} />
-                    <Route path="/admin/reportes" element={<ReportesAdmin />} />
-                    <Route
-                        path="/administracion"
-                        element={<Administracion />}
-                    />
+                    <Route element={<RutaProtegida rolesPermitidos={["ADMINISTRADOR"]} />}>
+                        <Route path="/admin" element={<PanelAdministracion />} />
+                        <Route path="/admin/pedidos" element={<PedidosAdmin />} />
+                        <Route path="/admin/stock-critico" element={<StockCritico />} />
+                        <Route path="/admin/categorias" element={<CategoriasAdmin />} />
+                        <Route path="/admin/usuarios" element={<UsuariosAdmin />} />
+                        <Route path="/admin/reportes" element={<ReportesAdmin />} />
+                        <Route path="/administracion" element={<Administracion />} />
+                    </Route>
                 </Route>
             </Routes>
+            </AuthProvider>
         </BrowserRouter>
     );
 }

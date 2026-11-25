@@ -1,21 +1,26 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "../organisms/Navbar";
 import Footer from "../organisms/Footer";
+import { useAuth } from "../../context/AuthContext";
 
 function PlantillaPublica() {
+    const { autenticado, esAdmin } = useAuth();
+
     const enlaces = [
         { texto: "Inicio", ruta: "/" },
         { texto: "Catálogo", ruta: "/catalogo" },
         { texto: "Categorías", ruta: "/categorias" },
         { texto: "Ofertas", ruta: "/ofertas" },
         { texto: "Carrito", ruta: "/carrito" },
-        { texto: "Mis compras", ruta: "/historial" },
-        { texto: "Administración", ruta: "/admin" },
+        ...(autenticado ? [{ texto: "Mis compras", ruta: "/historial" }] : []),
+        ...(esAdmin ? [{ texto: "Administración", ruta: "/admin" }] : []),
         { texto: "Nosotros", ruta: "/nosotros" },
         { texto: "Blog", ruta: "/blog" },
         { texto: "Contacto", ruta: "/contacto" },
-        { texto: "Registrarse", ruta: "/registro" },
-        { texto: "Iniciar Sesión", ruta: "/login" }
+        ...(!autenticado ? [
+          { texto: "Registrarse", ruta: "/registro" },
+          { texto: "Iniciar Sesión", ruta: "/login" }
+        ] : [])
     ];
 
     return (
