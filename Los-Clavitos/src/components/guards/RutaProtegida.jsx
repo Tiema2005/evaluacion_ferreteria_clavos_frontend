@@ -1,10 +1,32 @@
-import { Alert, Container } from "react-bootstrap";
+import { Alert, Button, Container, Spinner } from "react-bootstrap";
 import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 export default function RutaProtegida({ rolesPermitidos }) {
-  const { autenticado, usuario } = useAuth();
+  const { autenticado, usuario, comprobandoSesion, errorSesion, revalidarSesion } = useAuth();
   const location = useLocation();
+
+  if (comprobandoSesion) {
+    return (
+      <Container className="py-5 text-center" role="status">
+        <Spinner animation="border" size="sm" className="me-2" />
+        Verificando tu sesión con el servidor...
+      </Container>
+    );
+  }
+
+  if (errorSesion) {
+    return (
+      <Container className="py-5">
+        <Alert variant="warning">
+          No pudimos verificar la sesión con el servidor. Revisa tu conexión e inténtalo nuevamente.
+          <div className="mt-3">
+            <Button variant="primary" onClick={() => { void revalidarSesion(); }}>Reintentar</Button>
+          </div>
+        </Alert>
+      </Container>
+    );
+  }
 
   if (!autenticado) {
     return <Navigate to="/login" replace state={{ desde: location.pathname }} />;
