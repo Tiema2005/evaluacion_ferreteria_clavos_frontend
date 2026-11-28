@@ -1,8 +1,24 @@
 import { api } from "./api";
+import catalogoOriginal from "../data/productos.json";
+
+const metadatos = new Map(
+  (catalogoOriginal["Catálogo de Productos"] || []).slice(2).map((fila) => [
+    String(fila["FERRETERÍA LOS MAESTROS"]),
+    {
+      subcategoria: fila.Column3 || "",
+      marca: fila.Column5 || "",
+      unidad: fila.Column6 || "Unidad",
+      precioCompra: fila.Column7 ?? "",
+      imagen: fila.Column11 || "",
+    },
+  ])
+);
 
 // Este servicio es el único que escribe productos en PostgreSQL mediante Spring Boot.
 // Los campos opcionales que aún no existen en la BD se representan vacíos en React.
 export function adaptarProducto(p) {
+  // Los metadatos locales son opcionales. El stock/precio siempre vienen de la API.
+  const extra = metadatos.get(String(p.codigo)) || {};
   return {
     id: Number(p.id),
     idCategoria: Number(p.idCategoria),
@@ -10,14 +26,14 @@ export function adaptarProducto(p) {
     nombre: String(p.nombre),
     descripcion: p.descripcion || "",
     categoria: p.categoria || "",
-    subcategoria: "",
-    marca: "",
-    unidad: "Unidad",
-    precioCompra: "",
+    subcategoria: extra.subcategoria || "",
+    marca: extra.marca || "",
+    unidad: extra.unidad || "Unidad",
+    precioCompra: extra.precioCompra ?? "",
     precioVenta: Number(p.precio),
     stock: Number(p.stockActual),
     stockMinimo: Number(p.stockMinimo),
-    imagen: "",
+    imagen: extra.imagen || "",
     activo: Boolean(p.activo),
   };
 }
