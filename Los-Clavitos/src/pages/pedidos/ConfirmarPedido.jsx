@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, Col, Container, Form, Row, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import EncabezadoPagina from "../../components/molecules/EncabezadoPagina";
@@ -8,6 +8,7 @@ import { useCarrito } from "../../context/CarritoContext";
 import { useProductos } from "../../context/ProductosContext";
 import { useAuth } from "../../context/AuthContext";
 import { crearPedidoApi, errorPedido } from "../../services/pedidoApi";
+import { consultarMiCuenta } from "../../services/cuentaCorrienteApi";
 import { useTituloPagina } from "../../hooks/useTituloPagina";
 
 export default function ConfirmarPedido() {
@@ -19,9 +20,18 @@ export default function ConfirmarPedido() {
   const [metodoPago, setMetodoPago] = useState("EFECTIVO");
   const [direccion, setDireccion] = useState("");
   const [error, setError] = useState("");
+  const [creditoActivo, setCreditoActivo] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const bloqueo = useRef(false);
   useTituloPagina("Confirmar pedido");
+  useEffect(() => {
+    let vigente = true;
+    if (usuario?.rol === "CONTRATISTA") {
+      consultarMiCuenta().then(c => { if (vigente) setCreditoActivo(c.activa); })
+        .catch(() => { if (vigente) setCreditoActivo(false); });
+    } else { setCreditoActivo(false); }
+    return () => { vigente = false; };
+  }, [usuario?.rol]);
 
   async function confirmar(evento) {
     evento.preventDefault();
@@ -74,7 +84,7 @@ export default function ConfirmarPedido() {
                 <Form.Select value={metodoPago} onChange={e => setMetodoPago(e.target.value)} disabled={enviando}>
                   <option value="EFECTIVO">Efectivo al retirar o recibir</option>
                   <option value="TARJETA">Tarjeta (pago pendiente de coordinación)</option>
-                  {usuario?.rol === "CONTRATISTA" && <option value="CUENTA_CORRIENTE">Cuenta corriente (solo si está activa)</option>}
+                  {usuario?.rol === "CONTRATISTA" && creditoActivo && <option value="CUENTA_CORRIENTE">Cuenta corriente (saldo pendiente)</option>}
                 </Form.Select>
                 <Form.Text>Esta aplicación registra pedidos; no realiza cobros con tarjeta.</Form.Text>
               </Form.Group>

@@ -29,6 +29,8 @@ import CategoriasAdmin from "./pages/admin/CategoriasAdmin";
 import UsuariosAdmin from "./pages/admin/UsuariosAdmin";
 import HistorialPedidos from "./pages/pedidos/HistorialPedidos";
 import ReportesAdmin from "./pages/admin/ReportesAdmin";
+import MiCuentaCorriente from "./pages/cuenta/MiCuentaCorriente";
+import CuentasCorrientesAdmin from "./pages/admin/CuentasCorrientesAdmin";
 
 function EntradaPublica({ children }) {
     const { autenticado, esAdmin } = useAuth();
@@ -71,6 +73,9 @@ function App() {
                     />
                     <Route path="/contacto" element={<Contacto />} />
 
+                    <Route element={<RutaProtegida rolesPermitidos={["CONTRATISTA"]} />}>
+                        <Route path="/mi-cuenta" element={<MiCuentaCorriente />} />
+                    </Route>
                     <Route element={<RutaProtegida rolesPermitidos={["ADMINISTRADOR", "VENDEDOR"]} />}>
                         <Route path="/inventario" element={<Administracion />} />
                         <Route path="/pedidos" element={<PedidosAdmin />} />
@@ -82,6 +87,7 @@ function App() {
                         <Route path="/admin/categorias" element={<CategoriasAdmin />} />
                         <Route path="/admin/usuarios" element={<UsuariosAdmin />} />
                         <Route path="/admin/reportes" element={<ReportesAdmin />} />
+                        <Route path="/admin/cuentas-corrientes" element={<CuentasCorrientesAdmin />} />
                         <Route path="/administracion" element={<Administracion />} />
                     </Route>
                 </Route>

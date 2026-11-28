@@ -197,6 +197,14 @@ function PanelAdministracion() {
 
                 <Col xs={12} md={6}>
                     <div className="card h-100"><div className="card-body d-flex flex-column">
+                        <h3 className="h5">Cuentas corrientes</h3>
+                        <p>Consulta saldos de contratistas, habilita cuentas y registra abonos.</p>
+                        <div className="mt-auto"><Boton texto="Gestionar cuentas" onClick={() => navigate("/admin/cuentas-corrientes")} /></div>
+                    </div></div>
+                </Col>
+
+                <Col xs={12} md={6}>
+                    <div className="card h-100"><div className="card-body d-flex flex-column">
                         <h3 className="h5">Reportes y perfil</h3>
                         <p>Consulta pedidos, montos solicitados y la información del panel.</p>
                         <div className="mt-auto"><Boton texto="Ver reportes" onClick={() => navigate("/admin/reportes")} /></div>
