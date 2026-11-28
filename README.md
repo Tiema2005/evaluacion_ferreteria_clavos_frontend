@@ -78,3 +78,24 @@ La importación a `ferreteria_catalogo_test` dejó **87 productos**, de los cual
 - Funciones como mapa interactivo y reportes avanzados **no son obligatorias en la EP3** según la pauta de evaluación compartida; se reservan para el examen transversal.
 
 No incluir `.env`, contraseñas, JWT, secretos, archivos `.pem`, `node_modules`, `dist` ni `target` en la entrega.
+
+---
+
+## Reconocimiento de contribuciones del equipo
+
+> **Aclaracion de autoria para la Evaluacion Parcial 3:** Ferreteria Los Maestros fue desarrollado colaborativamente por **Emanuel Toledo** y **Felipe Escobar**. La siguiente tabla identifica los responsables de las actividades indicadas, segun lo declarado por el equipo.
+
+El autor o usuario registrado historicamente en GitHub puede ser diferente del responsable de una actividad. Esto se debe a la configuracion de Git y al proceso de integracion colaborativa.
+
+Los commits de fusion (merge) se atribuyen aqui al responsable de su integracion y coordinacion. Esta declaracion no modifica ni reemplaza el historial original de Git.
+
+| Commit | Actividad | Responsable |
+| --- | --- | --- |
+| `0c5f509` | Revalidar sesion y acceso a usuarios desactivados | **Emanuel Toledo** |
+| `b63a0a0` | Merge pull request #2 | **Felipe Escobar** |
+| `0dfc071` | Integrar catalogo, inventario y pedidos reales | **Felipe Escobar** |
+| `5f77e7f` | Importar catalogo de 85 productos y metadatos | **Emanuel Toledo** |
+| `e7abbbc` | Corregir revalidacion y conservar formularios | **Felipe Escobar** |
+| `022d297` | Integrar panel de cuenta corriente en React | **Emanuel Toledo** |
+| `1b3d498` | Actualizar README y manual de usuario EP3 | **Emanuel Toledo** |
+| `fb5e829` | Merge pull request #3 | **Felipe Escobar** |
