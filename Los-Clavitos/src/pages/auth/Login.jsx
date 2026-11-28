@@ -6,6 +6,7 @@ import FormularioLogin from "../../components/organisms/FormularioLogin";
 import { useTituloPagina } from "../../hooks/useTituloPagina";
 import { datosTienda } from "../../data/tienda";
 import { iniciarSesion } from "../../services/authService";
+import { borrarBorrador } from "../../utils/borradoresFormularios";
 
 function Login() {
     const navigate = useNavigate();
@@ -19,6 +20,7 @@ function Login() {
         setCargando(true);
         try {
             const sesion = await iniciarSesion(correo, contrasena);
+            borrarBorrador("ferreteria_borrador_login");
             // Solo navegamos cuando la API confirma las credenciales.
             navigate(sesion.usuario.rol === "ADMINISTRADOR" ? "/admin/usuarios" : "/catalogo", { replace: true });
         } catch (fallo) {

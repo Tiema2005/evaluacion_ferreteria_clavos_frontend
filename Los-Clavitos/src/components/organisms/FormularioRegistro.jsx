@@ -1,18 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CampoInput from "../atoms/CampoInput";
 import Boton from "../atoms/Boton";
+import { guardarBorrador, leerBorrador } from "../../utils/borradoresFormularios";
+
+const CLAVE_BORRADOR_REGISTRO = "ferreteria_borrador_registro";
 import { validarDatosRegistro } from "../../utils/validacionesRegistro";
 
 function FormularioRegistro({ onEnviar, cargando = false }) {
-    const [datos, setDatos] = useState({
+    const [datos, setDatos] = useState(() => ({
         nombre: "",
         apellidos: "",
         correo: "",
         contrasena: "",
-        confirmarContrasena: ""
-    });
+        confirmarContrasena: "",
+        ...leerBorrador(CLAVE_BORRADOR_REGISTRO)
+    }));
 
     const [errores, setErrores] = useState({});
+
+    useEffect(() => {
+        guardarBorrador(CLAVE_BORRADOR_REGISTRO, {
+            nombre: datos.nombre, apellidos: datos.apellidos, correo: datos.correo
+        });
+    }, [datos.nombre, datos.apellidos, datos.correo]);
 
     function cambiarCampo(evento) {
         const { name, value } = evento.target;
