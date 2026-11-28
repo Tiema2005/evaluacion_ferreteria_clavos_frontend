@@ -1,74 +1,45 @@
-import { useState } from "react";
-import { Container, Form, Table } from "react-bootstrap";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Container, Spinner, Table } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import EncabezadoPagina from "../../components/molecules/EncabezadoPagina";
 import Boton from "../../components/atoms/Boton";
 import Precio from "../../components/atoms/Precio";
+import { useAuth } from "../../context/AuthContext";
+import { listarPedidosApi, errorPedido } from "../../services/pedidoApi";
 import { useTituloPagina } from "../../hooks/useTituloPagina";
-import { listarPedidos } from "../../services/pedidoService";
 
-function HistorialPedidos() {
-    const navigate = useNavigate();
-    const [params] = useSearchParams();
-    const [correo, setCorreo] = useState(params.get("correo") || "");
-    const [buscado, setBuscado] = useState(params.get("correo") || "");
-    useTituloPagina("Historial de pedidos");
+export default function HistorialPedidos() {
+  const navigate = useNavigate();
+  const { usuario } = useAuth();
+  const [pedidos, setPedidos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  useTituloPagina("Mis pedidos");
+  const cargar = useCallback(async () => {
+    setCargando(true);
+    setError("");
+    try { setPedidos(await listarPedidosApi()); }
+    catch (e) { setError(errorPedido(e)); }
+    finally { setCargando(false); }
+  }, []);
+  useEffect(() => { void cargar(); }, [cargar]);
 
-    const pedidos = buscado.trim()
-        ? listarPedidos().filter(
-            (pedido) => pedido.cliente.correo.toLowerCase() === buscado.trim().toLowerCase()
-        )
-        : [];
-
-    function buscar(evento) {
-        evento.preventDefault();
-        setBuscado(correo);
-    }
-
-    return (
-        <Container className="py-4">
-            <EncabezadoPagina
-                titulo="Historial de pedidos"
-                descripcion="Consulta los pedidos guardados en esta demostración usando el correo del cliente."
-            />
-            <p className="text-secondary small">
-                Los pedidos se almacenan solo en este navegador. Esta búsqueda no representa una cuenta autenticada.
-            </p>
-            <Form className="mb-4" onSubmit={buscar}>
-                <Form.Label htmlFor="correoHistorial">Correo del cliente</Form.Label>
-                <div className="d-flex flex-wrap gap-2">
-                    <Form.Control
-                        id="correoHistorial"
-                        type="email"
-                        value={correo}
-                        onChange={(evento) => setCorreo(evento.target.value)}
-                        placeholder="ejemplo@correo.cl"
-                        required
-                        className="flex-grow-1"
-                    />
-                    <Boton tipo="submit" texto="Consultar" />
-                </div>
-            </Form>
-            {buscado && (
-                pedidos.length === 0 ? <p>No se encontraron pedidos para ese correo.</p> : (
-                    <Table striped bordered responsive>
-                        <thead><tr><th>Número</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Comprobante</th></tr></thead>
-                        <tbody>
-                            {pedidos.map((pedido) => (
-                                <tr key={pedido.numero}>
-                                    <td>{pedido.numero}</td>
-                                    <td>{new Date(pedido.fecha).toLocaleDateString("es-CL")}</td>
-                                    <td>{pedido.estado}</td>
-                                    <td><Precio precio={pedido.total} /></td>
-                                    <td><Boton texto="Ver detalle" variante="outline-primary" onClick={() => navigate(`/pedido/${encodeURIComponent(pedido.numero)}`)} /></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </Table>
-                )
-            )}
-        </Container>
-    );
+  return <Container className="py-4">
+    <EncabezadoPagina titulo="Mis pedidos" descripcion="Historial asociado a tu cuenta de Ferretería Los Maestros." />
+    <p className="text-secondary">Cuenta: {usuario?.correo}</p>
+    <div className="mb-3"><Boton texto="Actualizar" variante="outline-primary" onClick={cargar} deshabilitado={cargando} /></div>
+    {cargando && <p role="status"><Spinner size="sm" /> Cargando pedidos...</p>}
+    {error && <Alert variant="danger">{error}</Alert>}
+    {!cargando && !error && pedidos.length === 0 && <Alert variant="info">Aún no tienes pedidos registrados.</Alert>}
+    {!cargando && !error && pedidos.length > 0 && <Table striped bordered responsive>
+      <thead><tr><th>Pedido</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Detalle</th></tr></thead>
+      <tbody>{pedidos.map(p => <tr key={p.id}>
+        <td>#{p.numero}</td>
+        <td>{p.fecha ? new Date(p.fecha).toLocaleDateString("es-CL") : "-"}</td>
+        <td>{p.estado}</td>
+        <td><Precio precio={p.total} /></td>
+        <td><Boton texto="Ver detalle" variante="outline-primary" onClick={() => navigate(`/pedido/${p.numero}`)} /></td>
+      </tr>)}</tbody>
+    </Table>}
+  </Container>;
 }
-
-export default HistorialPedidos;

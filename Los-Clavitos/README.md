@@ -1,16 +1,22 @@
-# React + Vite
+# Ferretería Los Maestros — Aplicación React
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Esta carpeta contiene la aplicación React/Vite de la **Evaluación Parcial 3**. No es el proyecto Vite de plantilla.
 
-Currently, two official plugins are available:
+```bash
+npm ci
+npm run dev
+npm run build
+npm run test:run
+npm run lint
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+La API se configura con `VITE_API_URL` (por defecto `/api/v1`). El proxy de desarrollo en `vite.config.js` envía `/api` a `http://127.0.0.1:8081`, hacia el servidor aislado mediante túnel SSH.
 
-## React Compiler
+- Login JWT y persistencia por pestaña: `src/services/authService.js`, `src/context/AuthContext.jsx`.
+- Seguridad de rutas: `src/components/guards/RutaProtegida.jsx`.
+- HTTP centralizado: `src/services/api.js`.
+- Catálogo y stock: `src/services/productoApi.js`, `src/context/ProductosProvider.jsx`.
+- Pedidos reales: `src/services/pedidoApi.js`.
+- Cuenta corriente adicional: `src/services/cuentaCorrienteApi.js` (aún pendiente de prueba de cargo/abono).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Consulta el [README principal del repositorio](../README.md) y el [Manual de usuario](../docs/Manual_Usuario_EP3.docx).

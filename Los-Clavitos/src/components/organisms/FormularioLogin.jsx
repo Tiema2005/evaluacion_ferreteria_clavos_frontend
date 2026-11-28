@@ -1,12 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CampoInput from "../atoms/CampoInput";
 import Boton from "../atoms/Boton";
+import { guardarBorrador, leerBorrador } from "../../utils/borradoresFormularios";
+
+const CLAVE_BORRADOR_LOGIN = "ferreteria_borrador_login";
 import { validarCorreo, validarContrasena } from "../../utils/validaciones";
 
 function FormularioLogin({ onEnviar, cargando = false }) {
-  const [correo, setCorreo] = useState("");
+  const [correo, setCorreo] = useState(() => leerBorrador(CLAVE_BORRADOR_LOGIN).correo || "");
   const [contrasena, setContrasena] = useState("");
   const [errores, setErrores] = useState({});
+
+  useEffect(() => {
+    guardarBorrador(CLAVE_BORRADOR_LOGIN, { correo });
+  }, [correo]);
 
   function enviarFormulario(evento) {
     evento.preventDefault();

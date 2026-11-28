@@ -68,12 +68,28 @@ function ImagenProducto({ producto, variante = "tarjeta" }) {
             role="img"
             aria-label={`Representación de ${producto?.nombre || "producto"}`}
         >
-            <span
-                style={{ fontSize: tamano, lineHeight: 1 }}
-                aria-hidden="true"
-            >
-                {icono}
-            </span>
+            {producto?.imagen ? (
+                <img
+                    src={producto.imagen}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    style={{ width: "100%", height: "100%", objectFit: "contain", padding: "0.65rem" }}
+                    onError={(evento) => {
+                        const img = evento.currentTarget;
+                        if (!img.src.endsWith("/producto-sin-imagen.svg")) {
+                            img.src = "/producto-sin-imagen.svg";
+                        }
+                    }}
+                />
+            ) : (
+                <span
+                    style={{ fontSize: tamano, lineHeight: 1 }}
+                    aria-hidden="true"
+                >
+                    {icono}
+                </span>
+            )}
         </div>
     );
 }

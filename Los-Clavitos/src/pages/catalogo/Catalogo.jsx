@@ -9,7 +9,7 @@ import { useTituloPagina } from "../../hooks/useTituloPagina";
 
 function Catalogo() {
     const navigate = useNavigate();
-    const { productos } = useProductos();
+    const { productos, cargando, errorCarga } = useProductos();
     const [searchParams, setSearchParams] = useSearchParams();
 
     const categoriaInicial = searchParams.get("categoria") || "";
@@ -123,13 +123,15 @@ function Catalogo() {
                 )}
             </div>
 
-            {productosFiltrados.length === 0 ? (
+            {cargando && <div className="alert alert-info" role="status">Cargando catálogo desde PostgreSQL...</div>}
+            {errorCarga && <div className="alert alert-danger" role="alert">No se pudo cargar el catálogo: {errorCarga}</div>}
+            {!cargando && !errorCarga && (productosFiltrados.length === 0 ? (
                 <div className="alert alert-light border">
                     No se encontraron productos con los filtros seleccionados.
                 </div>
             ) : (
                 <CatalogoProductos productos={productosFiltrados} onVerProducto={verProducto} />
-            )}
+            ))}
         </Container>
     );
 }

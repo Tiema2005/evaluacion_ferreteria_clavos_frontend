@@ -30,7 +30,7 @@ function Carrito() {
         <Container className="py-4">
             <EncabezadoPagina
                 titulo="Carrito de compras"
-                descripcion="Revisa tus productos, ajusta cantidades y confirma tu pedido cuando esté listo."
+                descripcion="Revisa tus productos y ajusta las cantidades según el stock de PostgreSQL. Confirma tu compra para registrar el pedido en PostgreSQL y descontar el inventario."
             />
 
             {items.length === 0 ? (
@@ -89,7 +89,7 @@ function Carrito() {
                                 </div>
 
                                 <div className="d-grid gap-2">
-                                    <Boton texto="Confirmar pedido" variante="success" onClick={irConfirmacion} />
+                                    <Boton texto="Continuar a confirmar pedido" variante="outline-secondary" onClick={irConfirmacion} />
                                     <Boton texto="Seguir comprando" variante="outline-primary" onClick={volverCatalogo} />
                                     <Boton texto="Vaciar carrito" variante="outline-danger" onClick={vaciar} />
                                 </div>

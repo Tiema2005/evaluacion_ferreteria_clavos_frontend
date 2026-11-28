@@ -7,6 +7,7 @@ import Boton from "../../components/atoms/Boton";
 import { useTituloPagina } from "../../hooks/useTituloPagina";
 import { api } from "../../services/api";
 import { datosTienda } from "../../data/tienda";
+import { borrarBorrador } from "../../utils/borradoresFormularios";
 
 function Registro() {
     const navigate = useNavigate();
@@ -25,6 +26,7 @@ function Registro() {
                 correo: datos.correo,
                 password: datos.contrasena
             });
+            borrarBorrador("ferreteria_borrador_registro");
             setRegistrado(true);
         } catch (fallo) {
             const codigo = fallo.response?.status;

@@ -1,96 +1,92 @@
-import EncabezadoPagina from "../../components/molecules/EncabezadoPagina";
-import { Container, Table } from "react-bootstrap";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Container, Spinner, Table, Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { listarPedidos } from "../../services/pedidoService";
+import EncabezadoPagina from "../../components/molecules/EncabezadoPagina";
 import Boton from "../../components/atoms/Boton";
 import Precio from "../../components/atoms/Precio";
+import { listarPedidosApi, cambiarEstadoPedidoApi, errorPedido } from "../../services/pedidoApi";
+import { useAuth } from "../../context/AuthContext";
 import { useTituloPagina } from "../../hooks/useTituloPagina";
 
-function PedidosAdmin() {
-    const navigate = useNavigate();
+const TRANSICIONES = {
+  PENDIENTE: ["CONFIRMADO", "CANCELADO"],
+  CONFIRMADO: ["EN_PREPARACION", "CANCELADO"],
+  EN_PREPARACION: ["EN_CAMINO", "ENTREGADO", "CANCELADO"],
+  EN_CAMINO: ["ENTREGADO"],
+};
 
-    useTituloPagina("Administración de pedidos");
-
-    const pedidos = listarPedidos();
-
-    function verPedido(numero) {
-        navigate(`/pedido/${encodeURIComponent(numero)}`);
-    }
-
-    function volverPanel() {
-        navigate("/admin");
-    }
-
-    return (
-        <Container className="py-4">
-            <EncabezadoPagina
-                titulo="Administración de pedidos"
-                descripcion="Consulta los pedidos registrados en Ferretería Los Maestros."
-            />
-
-            <div className="mb-4">
-                <Boton
-                    texto="Volver al panel"
-                    variante="secondary"
-                    onClick={volverPanel}
-                />
-            </div>
-
-            <p>
-                <strong>Pedidos registrados:</strong>{" "}
-                {pedidos.length}
-            </p>
-
-            {pedidos.length === 0 ? (
-                <p>
-                    Todavía no hay pedidos registrados.
-                </p>
-            ) : (
-                <Table striped bordered hover responsive>
-                    <thead>
-                        <tr>
-                            <th>Número</th>
-                            <th>Cliente</th>
-                            <th>Estado</th>
-                            <th>Pago</th>
-                            <th>Total</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {pedidos.map((pedido) => (
-                            <tr key={pedido.numero}>
-                                <td>{pedido.numero}</td>
-
-                                <td>
-                                    {pedido.cliente.nombre}{" "}
-                                    {pedido.cliente.apellidos}
-                                </td>
-
-                                <td>{pedido.estado}</td>
-                                <td>{pedido.estadoPago || "Pago por realizar al recibir o retirar"}</td>
-
-                                <td>
-                                    <Precio precio={pedido.total} />
-                                </td>
-
-                                <td>
-                                    <Boton
-                                        texto="Ver comprobante"
-                                        variante="outline-primary"
-                                        onClick={() =>
-                                            verPedido(pedido.numero)
-                                        }
-                                    />
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
-            )}
-        </Container>
-    );
+export function siguientesEstados(p) {
+  const opciones = TRANSICIONES[p.estado] || [];
+  return opciones.filter(e => e !== "EN_CAMINO" || p.tipoEntrega === "DESPACHO");
 }
 
-export default PedidosAdmin;
+export default function PedidosAdmin() {
+  const { usuario } = useAuth();
+  const navigate = useNavigate();
+  const [pedidos, setPedidos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [procesando, setProcesando] = useState(null);
+  const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState("");
+  useTituloPagina("Gestión de pedidos");
+
+  const cargar = useCallback(async () => {
+    setCargando(true);
+    setError("");
+    try { setPedidos(await listarPedidosApi()); }
+    catch (e) { setError(errorPedido(e)); }
+    finally { setCargando(false); }
+  }, []);
+  useEffect(() => { void cargar(); }, [cargar]);
+
+  async function actualizar(id, estado) {
+    if (!estado || procesando) return;
+    if (!window.confirm(`¿Cambiar pedido #${id} a ${estado}?`)) return;
+    setProcesando(id);
+    setError("");
+    setMensaje("");
+    try {
+      await cambiarEstadoPedidoApi(id, estado);
+      setMensaje(`Pedido #${id} actualizado a ${estado}.`);
+      await cargar();
+    } catch (e) { setError(errorPedido(e)); }
+    finally { setProcesando(null); }
+  }
+
+  return <Container className="py-4">
+    <EncabezadoPagina titulo="Gestión de pedidos" descripcion="Pedidos y estados reales almacenados en PostgreSQL." />
+    <div className="d-flex gap-2 flex-wrap mb-3">
+      <Boton texto="Actualizar listado" onClick={cargar} variante="outline-primary" deshabilitado={cargando} />
+      <Boton texto={usuario?.rol === "ADMINISTRADOR" ? "Volver al panel" : "Ir al inventario"} variante="outline-secondary" onClick={() => navigate(usuario?.rol === "ADMINISTRADOR" ? "/admin" : "/inventario")} />
+    </div>
+    {cargando && <p role="status"><Spinner size="sm" /> Cargando...</p>}
+    {error && <Alert variant="danger">{error}</Alert>}
+    {mensaje && <Alert variant="success">{mensaje}</Alert>}
+    {!cargando && !error && pedidos.length === 0 && <Alert variant="info">Aún no hay pedidos.</Alert>}
+    {!cargando && pedidos.length > 0 && <Table responsive striped bordered hover>
+      <thead><tr><th>N.º</th><th>Cliente</th><th>Entrega</th><th>Estado</th><th>Pago</th><th>Total</th><th>Operaciones</th></tr></thead>
+      <tbody>{pedidos.map(p => <tr key={p.id}>
+        <td>#{p.numero}</td>
+        <td>{p.cliente.nombre} {p.cliente.apellido}</td>
+        <td>{p.tipoEntrega}</td>
+        <td>{p.estado}</td>
+        <td>{p.metodoPago}</td>
+        <td><Precio precio={p.total}/></td>
+        <td><div className="d-flex gap-2 flex-wrap">
+          <Boton texto="Detalle" variante="outline-primary" onClick={() => navigate(`/pedido/${p.numero}`)} />
+          {siguientesEstados(p).length > 0 && <Form.Select
+            aria-label={`Cambiar estado del pedido ${p.numero}`}
+            defaultValue=""
+            key={`${p.id}-${p.estado}`}
+            disabled={procesando === p.id}
+            onChange={e => { void actualizar(p.id, e.target.value); e.target.value = ""; }}
+          >
+            <option value="">Cambiar estado...</option>
+            {siguientesEstados(p).map(e => <option key={e} value={e}>{e}</option>)}
+          </Form.Select>}
+        </div></td>
+      </tr>)}</tbody>
+    </Table>}
+    <p className="text-secondary small">Cancelar devuelve stock según la transacción del backend. No se permite cancelar pedidos entregados ni en camino.</p>
+  </Container>;
+}

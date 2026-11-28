@@ -4,7 +4,7 @@ import Footer from "../organisms/Footer";
 import { useAuth } from "../../context/AuthContext";
 
 function PlantillaPublica() {
-    const { autenticado, esAdmin } = useAuth();
+    const { autenticado, esAdmin, usuario } = useAuth();
 
     const enlaces = [
         { texto: "Inicio", ruta: "/" },
@@ -14,6 +14,7 @@ function PlantillaPublica() {
         { texto: "Carrito", ruta: "/carrito" },
         ...(autenticado ? [{ texto: "Mis compras", ruta: "/historial" }] : []),
         ...(esAdmin ? [{ texto: "Administración", ruta: "/admin" }] : []),
+        ...(usuario?.rol === "CONTRATISTA" ? [{ texto: "Mi cuenta corriente", ruta: "/mi-cuenta" }] : []),
         { texto: "Nosotros", ruta: "/nosotros" },
         { texto: "Blog", ruta: "/blog" },
         { texto: "Contacto", ruta: "/contacto" },
