@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Container, Row, Col, Table, Form, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import EncabezadoPagina from "../../components/molecules/EncabezadoPagina";
 import Boton from "../../components/atoms/Boton";
 import Precio from "../../components/atoms/Precio";
 import { useProductos } from "../../context/ProductosContext";
-import { listarPedidos } from "../../services/pedidoService";
-import { listarUsuarios } from "../../services/usuarioService";
+import { listarPedidosApi, errorPedido } from "../../services/pedidoApi";
+import { api } from "../../services/api";
 import { useTituloPagina } from "../../hooks/useTituloPagina";
 import { validarCorreo } from "../../utils/validaciones";
 
@@ -42,10 +42,21 @@ function ReportesAdmin() {
         setErrorPerfil("");
         setMensajePerfil("Perfil de demostración guardado correctamente.");
     }
-    const pedidos = listarPedidos();
-    const usuarios = listarUsuarios();
+    const [pedidos, setPedidos] = useState([]);
+    const [totalUsuarios, setTotalUsuarios] = useState(null);
+    const [errorCarga, setErrorCarga] = useState("");
+    useEffect(() => {
+        let activo = true;
+        Promise.all([listarPedidosApi(), api.get("/usuarios")]).then(([p, u]) => {
+            if (!activo) return;
+            setPedidos(p);
+            setTotalUsuarios(Array.isArray(u.data) ? u.data.length : null);
+            setErrorCarga("");
+        }).catch(e => { if (activo) setErrorCarga(errorPedido(e)); });
+        return () => { activo = false; };
+    }, []);
     const totalSolicitado = pedidos.reduce((suma, pedido) => suma + pedido.total, 0);
-    const pendientesCuenta = pedidos.filter((pedido) => pedido.estadoPago === "Pendiente a fin de mes");
+    const pendientesCuenta = pedidos.filter((pedido) => pedido.metodoPago === "CUENTA_CORRIENTE" && pedido.estado !== "CANCELADO");
     const stockCritico = productos.filter((producto) => producto.stock <= 0 || producto.stock < producto.stockMinimo);
     useTituloPagina("Reportes y perfil");
 
@@ -53,9 +64,10 @@ function ReportesAdmin() {
         <Container className="py-4">
             <EncabezadoPagina
                 titulo="Reportes y perfil"
-                descripcion="Resumen de los movimientos simulados registrados en este navegador."
+                descripcion="Indicadores de pedidos y usuarios consultados en PostgreSQL. El perfil al final es demostrativo."
             />
             <div className="mb-4"><Boton texto="Volver al panel" variante="secondary" onClick={() => navigate("/admin")} /></div>
+            {errorCarga && <Alert variant="danger">No se pudieron cargar los indicadores: {errorCarga}</Alert>}
             <Row className="g-3 mb-4">
                 <Col xs={12} md={6} lg={3}>
                     <div className="card h-100"><div className="card-body">
@@ -69,7 +81,7 @@ function ReportesAdmin() {
                 </Col>
                 <Col xs={12} md={6} lg={3}>
                     <div className="card h-100"><div className="card-body">
-                        <h2 className="h6">Usuarios registrados</h2><p className="h3 mb-0">{usuarios.length}</p>
+                        <h2 className="h6">Usuarios registrados</h2><p className="h3 mb-0">{totalUsuarios ?? "No disponible"}</p>
                     </div></div>
                 </Col>
                 <Col xs={12} md={6} lg={3}>
@@ -85,8 +97,8 @@ function ReportesAdmin() {
                     <tbody>{pendientesCuenta.map((pedido) => (
                         <tr key={pedido.numero}>
                             <td>{pedido.numero}</td>
-                            <td>{pedido.cliente.nombre} {pedido.cliente.apellidos}</td>
-                            <td>{pedido.estadoPago}</td>
+                            <td>{pedido.cliente.nombre} {pedido.cliente.apellido}</td>
+                            <td>Pendiente de gestión</td>
                             <td><Precio precio={pedido.total} /></td>
                         </tr>
                     ))}</tbody>

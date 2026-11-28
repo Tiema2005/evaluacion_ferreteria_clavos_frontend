@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import RutaProtegida from "./components/guards/RutaProtegida";
@@ -52,14 +51,12 @@ function App() {
                     />
 
                     <Route path="/carrito" element={<Carrito />} />
-                    <Route
-                        path="/confirmar-pedido"
-                        element={<ConfirmarPedido />}
-                    />
-                    <Route
-                        path="/pedido/:numero"
-                        element={<ResultadoPedido />}
-                    />
+                    <Route element={<RutaProtegida rolesPermitidos={["CLIENTE", "CONTRATISTA"]} />}>
+                        <Route path="/confirmar-pedido" element={<ConfirmarPedido />} />
+                    </Route>
+                    <Route element={<RutaProtegida />}>
+                        <Route path="/pedido/:numero" element={<ResultadoPedido />} />
+                    </Route>
 
                     <Route path="/login" element={<EntradaPublica><Login /></EntradaPublica>} />
                     <Route path="/registro" element={<EntradaPublica><Registro /></EntradaPublica>} />
@@ -74,6 +71,10 @@ function App() {
                     />
                     <Route path="/contacto" element={<Contacto />} />
 
+                    <Route element={<RutaProtegida rolesPermitidos={["ADMINISTRADOR", "VENDEDOR"]} />}>
+                        <Route path="/inventario" element={<Administracion />} />
+                        <Route path="/pedidos" element={<PedidosAdmin />} />
+                    </Route>
                     <Route element={<RutaProtegida rolesPermitidos={["ADMINISTRADOR"]} />}>
                         <Route path="/admin" element={<PanelAdministracion />} />
                         <Route path="/admin/pedidos" element={<PedidosAdmin />} />

@@ -1,62 +1,95 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ProductosContext } from "./ProductosContext";
-import * as productoService from "../services/productoService";
+import { obtenerSesion } from "../services/authService";
+import {
+  cargarCatalogoApi, cargarGestionApi, cargarCategoriasApi,
+  crearProductoApi, editarProductoApi, desactivarProductoApi, ajustarStockApi,
+  mensajeErrorApi,
+} from "../services/productoApi";
 
-export function ProductosProvider(props) {
-    const [productos, setProductos] = useState(
-        () => productoService.listarProductos()
-    );
+export function ProductosProvider({ children }) {
+  const [productos, setProductos] = useState([]);
+  const [productosGestion, setProductosGestion] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [errorCarga, setErrorCarga] = useState("");
+  const solicitud = useRef(0);
 
-    // CREATE: agrega un producto y actualiza el estado.
-    function crear(datos) {
-        const nuevo = productoService.crearProducto(datos);
-
-        setProductos(productoService.listarProductos());
-
-        return nuevo;
+  const recargar = useCallback(async () => {
+    const actual = ++solicitud.current;
+    setCargando(true);
+    setErrorCarga("");
+    try {
+      const rol = obtenerSesion()?.usuario?.rol;
+      const puedeGestionar = rol === "ADMINISTRADOR" || rol === "VENDEDOR";
+      const [catalogo, categoriasApi, gestion] = await Promise.all([
+        cargarCatalogoApi(),
+        cargarCategoriasApi(),
+        puedeGestionar ? cargarGestionApi() : Promise.resolve([]),
+      ]);
+      if (solicitud.current === actual) {
+        setProductos(catalogo.filter(p => p.activo));
+        setProductosGestion(gestion);
+        setCategorias(categoriasApi);
+      }
+    } catch (error) {
+      if (solicitud.current === actual) {
+        setErrorCarga(mensajeErrorApi(error));
+        setProductos([]);
+        setProductosGestion([]);
+        setCategorias([]);
+      }
+    } finally {
+      if (solicitud.current === actual) setCargando(false);
     }
+  }, []);
 
-    // UPDATE: modifica un producto existente.
-    function actualizar(codigo, cambios) {
-        const actualizado = productoService.actualizarProducto(
-            codigo,
-            cambios
-        );
+  // Actualiza los permisos y el inventario al cambiar de cuenta o volver a la pestaña.
+  useEffect(() => {
+    const actualizar = () => { void recargar(); };
+    window.addEventListener("ferreteria:sesion", actualizar);
+    window.addEventListener("focus", actualizar);
+    actualizar();
+    return () => {
+      ++solicitud.current;
+      window.removeEventListener("ferreteria:sesion", actualizar);
+      window.removeEventListener("focus", actualizar);
+    };
+  }, [recargar]);
 
-        if (actualizado !== null) {
-            setProductos(productoService.listarProductos());
-        }
+  async function crear(datos) {
+    const nuevo = await crearProductoApi(datos, categorias);
+    await recargar();
+    return nuevo;
+  }
+  async function actualizar(codigo, cambios) {
+    const producto = productosGestion.find(p => p.codigo === codigo);
+    if (!producto) return null;
+    const actualizado = await editarProductoApi({ ...producto, ...cambios, id: producto.id }, categorias);
+    await recargar();
+    return actualizado;
+  }
+  async function eliminar(codigo) {
+    const producto = productosGestion.find(p => p.codigo === codigo && p.activo);
+    if (!producto) return false;
+    await desactivarProductoApi(producto.id);
+    await recargar();
+    return true;
+  }
+  async function ajustarStock(codigo, nuevoStock, motivo) {
+    const producto = productosGestion.find(p => p.codigo === codigo && p.activo);
+    if (!producto) throw new Error("Producto no encontrado o desactivado.");
+    const actualizado = await ajustarStockApi(producto.id, nuevoStock, motivo);
+    await recargar();
+    return actualizado;
+  }
 
-        return actualizado;
-    }
-
-    // DELETE: elimina un producto existente.
-    function eliminar(codigo) {
-        const eliminado = productoService.eliminarProducto(codigo);
-
-        if (eliminado) {
-            setProductos(productoService.listarProductos());
-        }
-
-        return eliminado;
-    }
-
-    // Recarga los productos desde localStorage.
-    function recargar() {
-        setProductos(productoService.listarProductos());
-    }
-
-    return (
-        <ProductosContext.Provider
-            value={{
-                productos,
-                crear,
-                actualizar,
-                eliminar,
-                recargar
-            }}
-        >
-            {props.children}
-        </ProductosContext.Provider>
-    );
+  return (
+    <ProductosContext.Provider value={{
+      productos, productosGestion, categorias, cargando, errorCarga,
+      crear, actualizar, eliminar, ajustarStock, recargar,
+    }}>
+      {children}
+    </ProductosContext.Provider>
+  );
 }

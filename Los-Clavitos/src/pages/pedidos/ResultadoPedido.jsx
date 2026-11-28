@@ -1,127 +1,46 @@
+import { useEffect, useState } from "react";
+import { Alert, Container, Spinner } from "react-bootstrap";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import EncabezadoPagina from "../../components/molecules/EncabezadoPagina";
-import { Container } from "react-bootstrap";
-import { useNavigate, useParams } from "react-router-dom";
-import { obtenerPedido } from "../../services/pedidoService";
-import Boton from "../../components/atoms/Boton";
 import ResumenPedido from "../../components/molecules/ResumenPedido";
+import Boton from "../../components/atoms/Boton";
+import { obtenerPedidoApi, errorPedido } from "../../services/pedidoApi";
 import { useTituloPagina } from "../../hooks/useTituloPagina";
 
-function ResultadoPedido() {
-    const navigate = useNavigate();
-    const { numero } = useParams();
+export default function ResultadoPedido() {
+  const { numero } = useParams();
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const [pedido, setPedido] = useState(state?.pedidoCreado?.numero === numero ? state.pedidoCreado : null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  useTituloPagina("Detalle de pedido");
 
-    const pedido = obtenerPedido(numero);
+  useEffect(() => {
+    let activo = true;
+    setCargando(true);
+    setError("");
+    obtenerPedidoApi(numero)
+      .then(d => { if (activo) setPedido(d); })
+      .catch(e => { if (activo) { setPedido(null); setError(errorPedido(e)); } })
+      .finally(() => { if (activo) setCargando(false); });
+    return () => { activo = false; };
+  }, [numero]);
 
-    useTituloPagina(
-        pedido ? "Pedido registrado" : "Pedido no encontrado"
-    );
-
-    function volverInicio() {
-        navigate("/");
-    }
-
-    function volverCarrito() {
-        navigate("/carrito");
-    }
-
-    if (!pedido) {
-        return (
-            <Container className="py-5">
-                <EncabezadoPagina titulo="No se encontró el pedido" />
-
-                <p className="alert alert-danger" role="alert">
-                    No existe un pedido registrado
-                    con el número indicado.
-                </p>
-
-                <Boton
-                    texto="Volver al carrito"
-                    variante="primary"
-                    onClick={volverCarrito}
-                />
-            </Container>
-        );
-    }
-
-    return (
-        <Container className="py-5">
-            <EncabezadoPagina titulo="Pedido registrado correctamente" />
-
-            <p className="alert alert-success" role="status">
-                Tu solicitud fue registrada exitosamente.
-            </p>
-
-            <div className="card">
-                <div className="card-body p-4">
-                    <h2 className="h4 fw-bold mb-4">
-                        Comprobante del pedido
-                    </h2>
-
-                    <p>
-                        <strong>Número:</strong>{" "}
-                        {pedido.numero}
-                    </p>
-
-                    <p>
-                        <strong>Estado:</strong>{" "}
-                        {pedido.estado}
-                    </p>
-
-                    <p>
-                        <strong>Cliente:</strong>{" "}
-                        {pedido.cliente.nombre}{" "}
-                        {pedido.cliente.apellidos}
-                    </p>
-
-                    <p>
-                        <strong>Correo:</strong>{" "}
-                        {pedido.cliente.correo}
-                    </p>
-
-                    <p>
-                        <strong>Entrega:</strong>{" "}
-                        {pedido.cliente.tipoEntrega}
-                    </p>
-
-                    {pedido.cliente.tipoEntrega ===
-                        "Despacho a domicilio" && (
-                        <p>
-                            <strong>Dirección:</strong>{" "}
-                            {pedido.cliente.direccion}
-                        </p>
-                    )}
-
-                    <p>
-                        <strong>Condición de pago:</strong>{" "}
-                        {pedido.condicionPago || "Pago al retirar o recibir"}
-                    </p>
-                    <p>
-                        <strong>Estado del pago:</strong>{" "}
-                        {pedido.estadoPago || "Pago por realizar al recibir o retirar"}
-                    </p>
-
-                    <hr className="my-4" />
-
-                    <ResumenPedido
-                        items={pedido.productos}
-                        total={pedido.total}
-                        titulo="Productos solicitados"
-                    />
-
-                    <p className="text-secondary mt-4">
-                        Este pedido fue registrado de manera
-                        simulada. No se ha realizado ningún cobro.
-                    </p>
-
-                    <Boton
-                        texto="Volver al inicio"
-                        variante="primary"
-                        onClick={volverInicio}
-                    />
-                </div>
-            </div>
-        </Container>
-    );
+  return <Container className="py-4">
+    <EncabezadoPagina titulo={`Pedido ${numero}`} descripcion="Información consultada en el servidor." />
+    {cargando && <p role="status"><Spinner animation="border" size="sm" /> Consultando pedido...</p>}
+    {error && <Alert variant="danger">{error}</Alert>}
+    {pedido && <div className="card card-body p-4">
+      <Alert variant="success">Pedido registrado en PostgreSQL. Estado actual: <strong>{pedido.estado}</strong>.</Alert>
+      <p><strong>Cliente:</strong> {pedido.cliente.nombre} {pedido.cliente.apellido}</p>
+      <p><strong>Fecha:</strong> {pedido.fecha ? new Date(pedido.fecha).toLocaleString("es-CL") : "Sin fecha"}</p>
+      <p><strong>Entrega:</strong> {pedido.tipoEntrega}</p>
+      <p><strong>Pago:</strong> {pedido.metodoPago} (sin cobro electrónico)</p>
+      {pedido.despacho?.[0]?.direccion_entrega && <p><strong>Dirección:</strong> {pedido.despacho[0].direccion_entrega}</p>}
+      {pedido.productos.length > 0 && <ResumenPedido items={pedido.productos} total={pedido.total} titulo="Productos solicitados" />}
+      <div className="mt-4"><Boton texto="Ver historial" onClick={() => navigate("/historial")} /></div>
+    </div>}
+    {!pedido && !cargando && !error && <Alert variant="warning">No existe el pedido.</Alert>}
+  </Container>;
 }
-
-export default ResultadoPedido;

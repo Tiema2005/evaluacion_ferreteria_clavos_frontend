@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Vite carga VITE_API_URL desde .env.local al iniciar el servidor de desarrollo.
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || "/api/v1",
   timeout: 10000,
   headers: { "Content-Type": "application/json" },
 });

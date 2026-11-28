@@ -7,7 +7,7 @@ function NavbarPrincipal({ nombre, enlaces }) {
     const { usuario, autenticado, cerrarSesion } = useAuth();
     const navigate = useNavigate();
     const accesosPrincipales = enlaces.filter((enlace) =>
-        ["Inicio", "Catálogo", "Categorías", "Ofertas", "Carrito", "Administración"].includes(enlace.texto)
+        ["Inicio", "Catálogo", "Categorías", "Ofertas", "Carrito", "Administración"].includes(enlace.texto) && (enlace.texto !== "Administración" || usuario?.rol === "ADMINISTRADOR")
     );
     const accesosInformacion = enlaces.filter((enlace) =>
         ["Nosotros", "Blog", "Contacto", "Mis compras", "Registrarse", "Iniciar Sesión"].includes(enlace.texto)
@@ -39,6 +39,8 @@ function NavbarPrincipal({ nombre, enlaces }) {
                             {accesosPrincipales.map((enlace) => (
                                 <Nav.Link key={enlace.texto} as={Link} to={enlace.ruta}>{enlace.texto}</Nav.Link>
                             ))}
+                            {autenticado && usuario?.rol === "VENDEDOR" && <Nav.Link as={Link} to="/inventario">Inventario</Nav.Link>}
+                            {autenticado && ["VENDEDOR", "ADMINISTRADOR"].includes(usuario?.rol) && <Nav.Link as={Link} to="/pedidos">Gestionar pedidos</Nav.Link>}
                             {accesosInformacion.length > 0 && (
                                 <NavDropdown title="Más" id="menu-secundario" align="end">
                                     {accesosInformacion.map((enlace) => (

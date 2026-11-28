@@ -1,23 +1,28 @@
 import EncabezadoPagina from "../../components/molecules/EncabezadoPagina";
+import { useEffect, useState } from "react";
+import { listarPedidosApi } from "../../services/pedidoApi";
 
 import { Container, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { useProductos } from "../../context/ProductosContext";
-import { listarPedidos } from "../../services/pedidoService";
-import { listarCategorias } from "../../services/categoriaService";
 
 import Boton from "../../components/atoms/Boton";
 import { useTituloPagina } from "../../hooks/useTituloPagina";
 
 function PanelAdministracion() {
     const navigate = useNavigate();
-    const { productos } = useProductos();
+    const { productos, categorias } = useProductos();
+    const [cantidadPedidos, setCantidadPedidos] = useState(null);
+    useEffect(() => {
+        let activo = true;
+        listarPedidosApi().then(p => { if (activo) setCantidadPedidos(p.length); })
+          .catch(() => { if (activo) setCantidadPedidos(null); });
+        return () => { activo = false; };
+    }, []);
 
     useTituloPagina("Panel de administración");
 
-    const pedidos = listarPedidos();
-    const categorias = listarCategorias(productos);
 
     const productosCriticos = productos.filter(
         (producto) =>
@@ -59,7 +64,7 @@ function PanelAdministracion() {
                             </h2>
 
                             <p className="display-6">
-                                {pedidos.length}
+                                {cantidadPedidos ?? "No disponible"}
                             </p>
 
                             <p>
@@ -165,8 +170,8 @@ function PanelAdministracion() {
                             <p>
                                 Categorías registradas:{" "}
                                 <strong>{categorias.length}</strong>.
-                                Puedes crear nuevas categorías
-                                y modificar las existentes.
+                                Las categorías provienen de PostgreSQL;
+                                su administración requiere endpoints adicionales.
                             </p>
 
                             <div className="mt-auto">
