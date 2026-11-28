@@ -3,7 +3,7 @@
 **Asignatura:** DSY1104 · Desarrollo Fullstack II · 2026
 **Caso:** Ferretería Los Maestros
 **Repositorio:** [Frontend](https://github.com/Tiema2005/evaluacion_ferreteria_clavos_frontend) · [Backend](https://github.com/Tiema2005/evaluacion_ferreteria_clavos_backend)
-**Estado de fuente:** rama `feature/integracion-catalogo-pedidos`, ZIP revisado el 27/11/2026.
+**Estado de fuente:** rama `main` integrada en GitHub, versión de entrega 28/11/2026.
 
 ## Qué hace la versión EP3
 
@@ -12,7 +12,7 @@ Frontend React/Vite con rutas y protección por rol, integrado con **API Spring 
 | Rol | Flujo principal |
 | --- | --- |
 | CLIENTE | Registro, login, catálogo, carrito, compra e historial personal |
-| CONTRATISTA | Compra, historial y consulta de cuenta corriente (última pendiente de prueba integral) |
+| CONTRATISTA | Compra, historial y consulta de cuenta corriente (prueba integrada de cuenta corriente completada) |
 | VENDEDOR | Inventario (ajustes de stock) y gestión de estados de pedidos |
 | ADMINISTRADOR | CRUD usuarios, catálogo, inventario, pedidos y panel de cuenta corriente adicional |
 
@@ -27,8 +27,8 @@ Frontend React/Vite con rutas y protección por rol, integrado con **API Spring 
 | `/historial`, `/pedido/:numero` | Autenticado; filtrado por servidor |
 | `/inventario`, `/pedidos` | VENDEDOR / ADMINISTRADOR |
 | `/admin/usuarios`, `/administracion`, `/admin/pedidos` | ADMINISTRADOR |
-| `/mi-cuenta` | CONTRATISTA; ampliación en pruebas |
-| `/admin/cuentas-corrientes` | ADMINISTRADOR; ampliación en pruebas |
+| `/mi-cuenta` | CONTRATISTA; flujo de cuenta corriente probado en ambiente aislado |
+| `/admin/cuentas-corrientes` | ADMINISTRADOR; flujo de cuenta corriente probado en ambiente aislado |
 
 ## Cómo funciona la sesión
 
@@ -63,7 +63,7 @@ El equipo reportó compilación Vite y **46 pruebas Vitest aprobadas** después 
 
 React Router → AuthContext / ProductosProvider → servicios Axios → `/api/v1/...` → Spring Boot → PostgreSQL RDS. Se utilizan Bootstrap/React Bootstrap, servicios de aplicación y componentes organizados por Atomic Design.
 
-La importación a `ferreteria_catalogo_test` dejó **87 productos**, de los cuales **86 activos**, incluyendo 85 referencias del catálogo académico y un producto ficticio activo. Los pedidos #4 y #5 se comprobaron con descuento real de stock y comprobante desde React.
+En el ambiente aislado se verificaron **87 productos, 86 activos**, más los pedidos #4 y #5 con descuento de stock y comprobante desde React. En producción se verificaron posteriormente **89 productos activos y 9 categorías**.
 
 ## Entregables
 
@@ -73,8 +73,8 @@ La importación a `ferreteria_catalogo_test` dejó **87 productos**, de los cual
 ## Estado / no confundir
 
 - **Probado:** sesiones, roles, productos, pedidos, control 409, acceso 403, stock, historial y gestión de estados.
-- **Compilado, pendiente de prueba integrada:** saldo, cargos y abonos de cuenta corriente.
-- **Pendiente:** integración definitiva de ramas a `main`, despliegue de la versión final y verificación pública de Swagger y React.
+- **Probado en ambiente aislado:** habilitación de cuenta corriente, cargo simulado $5.990, abono $2.000 y saldo $3.990.
+- **Integración terminada:** PR #3 y PR #4 fusionados a `main`; React/Nginx, API Spring Boot y Swagger comprobados en EC2; reconfirmar IP al presentar.
 - Funciones como mapa interactivo y reportes avanzados **no son obligatorias en la EP3** según la pauta de evaluación compartida; se reservan para el examen transversal.
 
 No incluir `.env`, contraseñas, JWT, secretos, archivos `.pem`, `node_modules`, `dist` ni `target` en la entrega.
